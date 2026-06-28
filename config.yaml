@@ -1,0 +1,28 @@
+cohorts:
+  cohort1:
+    file: data/cohort1.csv
+    preset: basic
+    label: Baseline
+  cohort2:
+    file: data/cohort2.csv
+    preset: nopreannotations
+    label: Keybinds+Visuals
+  cohort3:
+    file: data/cohort3.csv
+    preset: full
+    label: Suggestions
+
+reading_session_keys:
+  - READERUID
+  - TEXTUID
+  - TEXTLANG
+
+# Optional: seconds per annotation session (same for all if set)
+default_timeout_sec: null
+
+# Optional: path to session metadata CSV
+# columns: ANNOTATIONSESSIONID, total_fixations, invalid_count, timeout_sec
+session_metadata_file: null
+
+# Optional: path to characters.csv for spatial agreement
+characters_file: null
