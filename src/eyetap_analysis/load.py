@@ -112,9 +112,7 @@ def load_annotations(config: AnalysisConfig) -> tuple[pd.DataFrame, ValidationRe
 
     combined = _dedupe_annotations(combined, report)
     _validate_rater_counts(combined, report)
-
-    combined = combined[~combined["READERUID"].isin(config.invalid)]
-
+    combined = combined[~combined["ANNOTATORID"].isin(config.invalid)]
     return combined, report
 
 
