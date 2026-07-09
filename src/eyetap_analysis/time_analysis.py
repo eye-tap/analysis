@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, cast
 
 import pandas as pd
+import numpy as np
 import json
 
 from eyetap_analysis.config import AnalysisConfig
@@ -32,9 +33,10 @@ def run_analysis(
         return 1
 
     # Compute time spent on texts
-    decoded: list[list[AnalyticsData]] = []
-    time_intervals: list[list[float]] = []
+    decoded: dict[int, list[AnalyticsData]] = {}
+    time_intervals: dict[int, list[float]] = {}
     for idx, analytics in enumerate(ud[analytics_column]):
+        uid: int = int(cast(np.int64, ud[user_id_column][idx]))
         data: list[AnalyticsData] = json.loads(analytics)
         interval = 0
         intervals: list[float] = []
@@ -49,12 +51,16 @@ def run_analysis(
         if len(intervals) > 3:
             print(
                 "WARNING: More than three intervals found for user with id",
-                ud[user_id_column][idx],
+                uid,
                 "The intervals are",
                 intervals,
             )
-        time_intervals.append(intervals)
-        decoded.append(data)
+        total = 0
+        for el in intervals:
+            total += el
+        print("Total time for user", uid, "is", total)
+        time_intervals[uid] = intervals
+        decoded[uid] = data
 
     print(time_intervals)
 
