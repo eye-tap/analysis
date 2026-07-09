@@ -123,7 +123,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     time_analysis = sp.add_parser("time")
     time_analysis.add_argument("userdata", type=Path, default="userdata.csv")
-    time_analysis.add_argument("annotations", type=Path, default="data.csv")
     time_analysis.add_argument(
         "--analytics-name",
         default="analytics",
@@ -132,7 +131,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     time_analysis.add_argument(
         "--userid-name",
-        default="userid",
+        default="user_id",
         help="The name of the userid column in the userdata file",
         dest="userid",
     )
@@ -157,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
         return run_analysis(config, output_dir)
     elif args.cmd == "time":
         return time_analysis.run_analysis(
-            args.userdata, args.analyatics, args.userid, config, output_dir
+            args.userdata, args.analytics, args.userid, config, output_dir
         )
     else:
         return 1

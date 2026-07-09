@@ -34,16 +34,18 @@ def run_analysis(
     # Compute time spent on texts
     decoded: list[list[AnalyticsData]] = []
     time_intervals: list[list[float]] = []
-    for idx, user in enumerate(ud[analytics_column]):
-        data: list[AnalyticsData] = json.loads(user)
+    for idx, analytics in enumerate(ud[analytics_column]):
+        data: list[AnalyticsData] = json.loads(analytics)
         interval = 0
         intervals: list[float] = []
         for record in data:
             interval += record["e"]
-            if record["e"] < 60:
+            if record["e"] < 59 and record["e"] > 0 and interval > 61:
                 # We (likely) have a new text here
                 intervals.append(interval)
                 interval = 0
+        if interval > 0:
+            intervals.append(interval)
         if len(intervals) > 3:
             print(
                 "WARNING: More than three intervals found for user with id",
@@ -59,7 +61,6 @@ def run_analysis(
     # Count fixations created per text
     grouped = annotations.groupby(
         [
-            "reading_session_id",
             "ANNOTATORID",
         ],
         as_index=False,
