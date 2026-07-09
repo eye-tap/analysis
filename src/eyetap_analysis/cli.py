@@ -4,12 +4,13 @@ import argparse
 from datetime import date
 from pathlib import Path
 
+from eyetap_analysis import time_analysis
 from eyetap_analysis.agreement import (
     agreement_results_to_frame,
     compute_agreement_by_group,
     summarize_cohort_agreement,
 )
-from eyetap_analysis.config import load_config
+from eyetap_analysis.config import AnalysisConfig, load_config
 from eyetap_analysis.efficiency import (
     compute_session_efficiency,
     summarize_cohort_efficiency,
@@ -33,8 +34,10 @@ def _parse_cohort_overrides(raw: list[str] | None) -> dict[str, Path]:
     return overrides
 
 
-def run_analysis(config_path: Path, output_dir: Path, cohort_overrides: dict[str, Path] | None = None) -> int:
-    config = load_config(config_path, cohort_overrides=cohort_overrides or {})
+def run_analysis(
+    config: AnalysisConfig,
+    output_dir: Path,
+) -> int:
     annotations, validation = load_annotations(config)
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -45,14 +48,18 @@ def run_analysis(config_path: Path, output_dir: Path, cohort_overrides: dict[str
     metadata = load_session_metadata(config)
     session_efficiency = compute_session_efficiency(annotations, config, metadata)
     cohort_efficiency_summary = summarize_cohort_efficiency(session_efficiency)
-    reading_session_efficiency = summarize_reading_session_efficiency(session_efficiency)
+    reading_session_efficiency = summarize_reading_session_efficiency(
+        session_efficiency
+    )
 
     agreement_results = compute_agreement_by_group(annotations, config)
     agreement_by_reading_session = agreement_results_to_frame(agreement_results)
     cohort_agreement_summary = summarize_cohort_agreement(agreement_by_reading_session)
     cohort_agreement_ci = summarize_agreement_with_ci(agreement_by_reading_session)
 
-    efficiency_tests, efficiency_pairwise = compare_efficiency_across_cohorts(session_efficiency)
+    efficiency_tests, efficiency_pairwise = compare_efficiency_across_cohorts(
+        session_efficiency
+    )
 
     outputs = write_analysis_outputs(
         output_dir,
@@ -88,7 +95,9 @@ def run_analysis(config_path: Path, output_dir: Path, cohort_overrides: dict[str
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run eyetracking annotation survey analysis")
+    parser = argparse.ArgumentParser(
+        description="Run eyetracking annotation survey analysis"
+    )
     parser.add_argument(
         "--config",
         type=Path,
@@ -108,6 +117,26 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="NAME=PATH",
         help="Override cohort CSV path, e.g. cohort1=data/cohort1.csv",
     )
+
+    sp = parser.add_subparsers(dest="cmd")
+    sp.add_parser("analysis")
+
+    time_analysis = sp.add_parser("time")
+    time_analysis.add_argument("userdata", type=Path, default="userdata.csv")
+    time_analysis.add_argument("annotations", type=Path, default="data.csv")
+    time_analysis.add_argument(
+        "--analytics-name",
+        default="analytics",
+        help="The name of the analytics column in the userdata file",
+        dest="analytics",
+    )
+    time_analysis.add_argument(
+        "--userid-name",
+        default="userid",
+        help="The name of the userid column in the userdata file",
+        dest="userid",
+    )
+
     return parser
 
 
@@ -122,10 +151,17 @@ def main(argv: list[str] | None = None) -> int:
     if output_dir is None:
         output_dir = Path("outputs") / f"run_{date.today().isoformat()}"
     output_dir = output_dir.resolve()
+    config = load_config(config_path, cohort_overrides=overrides or {})
 
-    return run_analysis(config_path, output_dir, overrides or None)
+    if args.cmd == "analysis":
+        return run_analysis(config, output_dir)
+    elif args.cmd == "time":
+        return time_analysis.run_analysis(
+            args.userdata, args.annotations, args.analyatics, args.userid, config
+        )
+    else:
+        return 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
