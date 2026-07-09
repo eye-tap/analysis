@@ -60,12 +60,10 @@ def run_analysis(
 
     # Count fixations created per text
     grouped = annotations.groupby(
-        [
-            "ANNOTATORID",
-        ],
+        ["ANNOTATORID", "reading_session_id"],
         as_index=False,
     ).agg(
-        annotations_per_session=("reading_session_id", "size"),
+        annotations_in_session=("reading_session_id", "size"),
     )
     print(grouped)
 
