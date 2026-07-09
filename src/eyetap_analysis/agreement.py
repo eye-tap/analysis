@@ -177,18 +177,25 @@ def compute_agreement_by_group(
     group_keys = ["cohort", "cohort_label", "reading_session_id"]
 
     for (cohort, cohort_label, reading_session_id), group in annotations.groupby(group_keys):
+        # if reading_session_id != "102|8|en":
+        #     continue
         wide = build_wide_matrix(group)
         wide = _fixations_with_multiple_raters(wide)
+        print(f"Session {reading_session_id}: Wide \n{wide}")
+
+        # for index, row in wide.iterrows():
+        #     print(row)
+
         n_raters = wide.notna().any(axis=0).sum()
         warning = None
         if n_raters < 2:
             warning = "Fewer than 2 raters with overlapping fixations"
 
-        icc, icc_lo, icc_hi = _compute_icc(wide)
-        kappa = _compute_fleiss_kappa(wide)
+        icc, icc_lo, icc_hi = 0,0,0 # _compute_icc(wide)
+        kappa = 0 # _compute_fleiss_kappa(wide)
         alpha = _compute_krippendorff_alpha(wide)
-        exact = _exact_agreement_rate(wide)
-
+        exact = 0 # _exact_agreement_rate(wide)
+        print(f"Alpha {alpha}")
         spatial_x = spatial_y = None
         if centroids is not None and not wide.empty:
             spatial_x, spatial_y = _compute_spatial_icc(wide, centroids)

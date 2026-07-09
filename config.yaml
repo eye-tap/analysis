@@ -26,3 +26,6 @@ session_metadata_file: null
 
 # Optional: path to characters.csv for spatial agreement
 characters_file: null
+
+invalid:
+  - 19
