@@ -157,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         return run_analysis(config, output_dir)
     elif args.cmd == "time":
         return time_analysis.run_analysis(
-            args.userdata, args.annotations, args.analyatics, args.userid, config
+            args.userdata, args.analyatics, args.userid, config, output_dir
         )
     else:
         return 1
