@@ -38,6 +38,7 @@ class AnalysisConfig:
     session_metadata_file: Path | None = None
     characters_file: Path | None = None
     skip_missing_cohort_files: bool = True
+    invalid: list[int] = ()
 
     def resolve(self, path: str | Path | None) -> Path | None:
         if path is None:
@@ -76,7 +77,7 @@ def load_config(
 
     metadata = raw.get("session_metadata_file")
     characters = raw.get("characters_file")
-
+    invalid = raw.get("invalid")
     return AnalysisConfig(
         base_dir=base_dir,
         cohorts=cohorts,
@@ -87,4 +88,5 @@ def load_config(
         session_metadata_file=base_dir / metadata if metadata else None,
         characters_file=base_dir / characters if characters else None,
         skip_missing_cohort_files=skip_missing_cohort_files,
+        invalid=invalid,
     )
