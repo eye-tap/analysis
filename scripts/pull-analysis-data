@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+export KUBECONFIG=~/kubeconfig.yml
+alias kctl="kubectl --insecure-skip-tls-verify --namespace ivia-student-projects"
+
+kctl exec --stdin --tty eye-tap-production-pg-0 -- bash -c "psql -U eyetap -c \"\copy ($(cat ./query.sql | sed -e 's/;//g')) TO '/tmp/userdata.csv' WITH CSV DELIMITER ',' HEADER\""
+
+kctl cp eye-tap-production-pg-0:/tmp/userdata.csv ../data/userdata.csv

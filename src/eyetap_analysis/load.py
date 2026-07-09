@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
 from pathlib import Path
+from typing import TypedDict, cast
 
 import pandas as pd
+import numpy as np
 
 from eyetap_analysis.config import REQUIRED_COLUMNS, AnalysisConfig, CohortConfig
 
@@ -37,7 +40,11 @@ def _validate_schema(frame: pd.DataFrame, report: ValidationReport) -> None:
     if missing:
         report.error(f"Missing required columns: {sorted(missing)}")
 
-    extra = set(frame.columns) - REQUIRED_COLUMNS - {"cohort", "preset", "cohort_label", "reading_session_id"}
+    extra = (
+        set(frame.columns)
+        - REQUIRED_COLUMNS
+        - {"cohort", "preset", "cohort_label", "reading_session_id"}
+    )
     if extra:
         report.warn(f"Unexpected columns will be ignored: {sorted(extra)}")
 
@@ -49,7 +56,9 @@ def _dedupe_annotations(frame: pd.DataFrame, report: ValidationReport) -> pd.Dat
         report.warn(
             f"Found {count} duplicate rows on (ANNOTATIONSESSIONID, FIXATIONUID); keeping first occurrence"
         )
-        frame = frame.drop_duplicates(subset=["ANNOTATIONSESSIONID", "FIXATIONUID"], keep="first")
+        frame = frame.drop_duplicates(
+            subset=["ANNOTATIONSESSIONID", "FIXATIONUID"], keep="first"
+        )
     return frame
 
 
@@ -72,7 +81,14 @@ def load_cohort_csv(path: Path, cohort: CohortConfig) -> pd.DataFrame:
     frame["cohort"] = cohort.name
     frame["preset"] = cohort.preset
     frame["cohort_label"] = cohort.label
-    for column in ("ANNOTATIONSESSIONID", "ANNOTATORID", "CHARUID", "FIXATIONUID", "READERUID", "TEXTUID"):
+    for column in (
+        "ANNOTATIONSESSIONID",
+        "ANNOTATORID",
+        "CHARUID",
+        "FIXATIONUID",
+        "READERUID",
+        "TEXTUID",
+    ):
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
     if frame[list(REQUIRED_COLUMNS)].isna().any().any():
         raise ValueError(f"Non-numeric values found in required columns of {path}")
@@ -104,7 +120,9 @@ def load_annotations(config: AnalysisConfig) -> tuple[pd.DataFrame, ValidationRe
         return pd.DataFrame(), report
 
     combined = pd.concat(frames, ignore_index=True)
-    combined["reading_session_id"] = _make_reading_session_id(combined, config.reading_session_keys)
+    combined["reading_session_id"] = _make_reading_session_id(
+        combined, config.reading_session_keys
+    )
 
     _validate_schema(combined, report)
     if not report.ok:
@@ -126,5 +144,100 @@ def load_session_metadata(config: AnalysisConfig) -> pd.DataFrame | None:
     if not required.issubset(metadata.columns):
         raise ValueError(f"Session metadata must include columns: {sorted(required)}")
 
-    metadata["ANNOTATIONSESSIONID"] = pd.to_numeric(metadata["ANNOTATIONSESSIONID"], errors="coerce")
+    metadata["ANNOTATIONSESSIONID"] = pd.to_numeric(
+        metadata["ANNOTATIONSESSIONID"], errors="coerce"
+    )
     return metadata
+
+
+# ┌                                                ┐
+# │                   Analytics                    │
+# └                                                ┘
+class Analytics(TypedDict):
+    timestamp: int
+    elapsed: float
+    text_id: int
+    assignments: AnalyticsAssignments
+    events: AnalyticsEvents
+
+
+class AnalyticsEvents(TypedDict):
+    undo_redo: int
+    completion: int
+    # Disagreement resolution
+    res_click: int
+    res_bind: int
+    zoom: int
+    scanpath_move: int
+    export: int
+
+
+class AnalyticsAssignments(TypedDict):
+    added: int
+    removed: int
+    invalidated: int
+    un_invalidated: int
+
+
+class AnalyticsRaw(TypedDict):
+    d: AnalyticsEventsRaw
+    f: AnalyticsAssignmentsRaw
+    t: int
+    e: float
+    x: int
+
+
+class AnalyticsEventsRaw(TypedDict):
+    ur: int
+    c: int
+    dc: int
+    db: int
+    z: int
+    sp: int
+    e: int
+
+
+class AnalyticsAssignmentsRaw(TypedDict):
+    a: int  # added ann
+    u: int  # deleted ann
+    f: int  # invalidate
+    d: int  # Undo invalidate
+
+
+def load_analytics(
+    path: str, analytics_column: str = "analytics", user_id_column: str = "user_id"
+):
+    userdata = pd.read_csv(path)
+    data: dict[int, list[Analytics]] = {}
+
+    for idx, analytics in enumerate(userdata[analytics_column]):
+        uid: int = int(cast(np.int64, userdata[user_id_column][idx]))
+        raw: list[AnalyticsRaw] = json.loads(analytics)
+        parsed: list[Analytics] = []
+        for el in raw:
+            parsed.append(
+                {
+                    "assignments": {
+                        "added": el["f"]["a"],
+                        "removed": el["f"]["u"],
+                        "invalidated": el["f"]["f"],
+                        "un_invalidated": el["f"]["d"],
+                    },
+                    "elapsed": el["e"],
+                    "text_id": el["x"],
+                    "events": {
+                        "completion": el["d"]["c"],
+                        "export": el["d"]["e"],
+                        "res_bind": el["d"]["db"],
+                        "res_click": el["d"]["dc"],
+                        "scanpath_move": el["d"]["sp"],
+                        "undo_redo": el["d"]["ur"],
+                        "zoom": el["d"]["z"],
+                    },
+                    "timestamp": el["t"],
+                }
+            )
+
+        data[uid] = parsed
+
+    return data
