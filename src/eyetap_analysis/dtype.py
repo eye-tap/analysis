@@ -55,6 +55,7 @@ class AnalyticsAssignmentsRaw(TypedDict):
 class AnalyticsDetails(TypedDict):
     raw: dict[int, list[Analytics]]
     aggregate: dict[int, list[AnalyticsAnalysisResults]]
+    total: dict[int, list[AnalyticsAnalysisResults]]
 
 
 class AnalyticsAnalysisResults(Analytics):

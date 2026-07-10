@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import cast
 
-from eyetap_analysis.analytics import aggregate_analytics
+from eyetap_analysis.analytics import aggregate_analytics, sum_analytics
 from eyetap_analysis.dtype import Analytics, AnalyticsDetails, AnalyticsRaw
 import pandas as pd
 import numpy as np
@@ -193,4 +193,5 @@ def load_analytics(
 
         data[uid] = parsed
 
-    return {"raw": data, "aggregate": aggregate_analytics(data)}
+    aggregate = aggregate_analytics(data)
+    return {"raw": data, "aggregate": aggregate, "total": sum_analytics(aggregate)}

@@ -33,6 +33,9 @@ def aggregate_analytics(a: dict[int, list[Analytics]]):
 
             while idx < len(user) and user[idx]["text_id"] == text_id:
                 frame = user[idx]
+                if text_id == -2:
+                    continue
+
                 d["assignments"] = {
                     "removed": d["assignments"]["removed"]
                     + frame["assignments"]["removed"],
@@ -57,5 +60,41 @@ def aggregate_analytics(a: dict[int, list[Analytics]]):
                 d["elapsed"] += frame["elapsed"]
                 idx += 1
 
-            res[uid].append(d)
+            if text_id != -2:
+                res[uid].append(d)
     return res
+
+
+def sum_analytics(a: dict[int, list[AnalyticsAnalysisResults]]):
+    data: dict[int, list[AnalyticsAnalysisResults]] = {}
+    for uid in a:
+        user = a[uid]
+        d: dict[int, AnalyticsAnalysisResults] = {}
+
+        for val in user:
+            try:
+                d[val["text_id"]]["assignments"]["added"] += val["assignments"]["added"]
+                d[val["text_id"]]["assignments"]["removed"] += val["assignments"][
+                    "removed"
+                ]
+                d[val["text_id"]]["assignments"]["invalidated"] += val["assignments"][
+                    "invalidated"
+                ]
+                d[val["text_id"]]["assignments"]["un_invalidated"] += val[
+                    "assignments"
+                ]["un_invalidated"]
+                d[val["text_id"]]["events"]["completion"] += val["events"]["completion"]
+                d[val["text_id"]]["events"]["res_bind"] += val["events"]["res_bind"]
+                d[val["text_id"]]["events"]["res_click"] += val["events"]["res_click"]
+                d[val["text_id"]]["events"]["scanpath_move"] += val["events"][
+                    "scanpath_move"
+                ]
+                d[val["text_id"]]["events"]["export"] += val["events"]["export"]
+                d[val["text_id"]]["events"]["undo_redo"] += val["events"]["undo_redo"]
+                d[val["text_id"]]["events"]["zoom"] += val["events"]["zoom"]
+                d[val["text_id"]]["elapsed"] += val["elapsed"]
+            except Exception as e:
+                print(e)
+                d[val["text_id"]] = val
+
+        data[uid] = list(d.values())
