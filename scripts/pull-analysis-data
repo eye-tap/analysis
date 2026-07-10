@@ -5,6 +5,11 @@ set -e
 export KUBECONFIG=~/kubeconfig.yml
 alias kctl="kubectl --insecure-skip-tls-verify --namespace ivia-student-projects"
 
-kctl exec --stdin --tty eye-tap-production-pg-0 -- bash -c "psql -U eyetap -c \"\copy ($(cat ./query.sql | sed -e 's/;//g') AND d.survey_id > 100 AND d.survey_id < 110) TO '/tmp/userdata.csv' WITH CSV DELIMITER ',' HEADER\""
+kctl exec --stdin --tty eye-tap-production-pg-0 -- bash -c "psql -U eyetap -c \"\copy ($(cat ./query-analytics.sql | sed -e 's/;//g') AND d.survey_id > 100 AND d.survey_id < 110) TO '/tmp/userdata.csv' WITH CSV DELIMITER ',' HEADER\""
+
+kctl exec --stdin --tty eye-tap-production-pg-0 -- bash -c "psql -U eyetap -c \"\copy ($(cat ./query-association.sql | sed -e 's/;//g') AND d.survey_id > 100 AND d.survey_id < 110) TO '/tmp/association.csv' WITH CSV DELIMITER ',' HEADER\""
 
 kctl cp eye-tap-production-pg-0:/tmp/userdata.csv ../data/userdata.csv
+kctl cp eye-tap-production-pg-0:/tmp/association.csv ../data/association.csv
+
+sed --in-place -r 's/"\{""preset"":""([a-z]+)"".*\}"/\1/' ../data/association.csv
