@@ -1,8 +1,4 @@
-from eyetap_analysis.load import Analytics
-
-
-class AnalyticsAnalysisResults(Analytics):
-    pass
+from eyetap_analysis.dtype import Analytics, AnalyticsAnalysisResults
 
 
 def aggregate_analytics(a: dict[int, list[Analytics]]):

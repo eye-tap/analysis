@@ -31,6 +31,7 @@ class CohortConfig:
 class AnalysisConfig:
     base_dir: Path
     cohorts: list[CohortConfig]
+    userdata: Path
     reading_session_keys: list[str] = field(
         default_factory=lambda: ["READERUID", "TEXTUID", "TEXTLANG"]
     )
@@ -52,6 +53,7 @@ class AnalysisConfig:
 def load_config(
     config_path: Path,
     *,
+    userdata_path_override: str | None = None,
     skip_missing_cohort_files: bool = True,
     cohort_overrides: dict[str, Path] | None = None,
 ) -> AnalysisConfig:
@@ -74,6 +76,8 @@ def load_config(
                 label=details["label"],
             )
         )
+    if userdata_path_override:
+        raw["userdata"] = Path(userdata_path_override)
 
     metadata = raw.get("session_metadata_file")
     characters = raw.get("characters_file")
@@ -81,6 +85,7 @@ def load_config(
     return AnalysisConfig(
         base_dir=base_dir,
         cohorts=cohorts,
+        userdata=raw["userdata"],
         reading_session_keys=raw.get(
             "reading_session_keys", ["READERUID", "TEXTUID", "TEXTLANG"]
         ),

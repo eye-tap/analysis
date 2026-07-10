@@ -12,6 +12,8 @@ cohorts:
     preset: full
     label: Suggestions
 
+userdata: data/userdata.csv
+
 reading_session_keys:
   - READERUID
   - TEXTUID
