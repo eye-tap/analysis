@@ -8,16 +8,15 @@ from eyetap_analysis.config import AnalysisConfig
 def compute_session_efficiency(
     analytics: pd.DataFrame,
 ) -> pd.DataFrame:
-
+    print(analytics)
     analytics["added_per_sec"] = analytics["added"] / analytics["elapsed"]
 
-    result = analytics.groupby("text_id", as_index=False).agg(
+    result = analytics.groupby(["text_id", "cohort"], as_index=False).agg(
         mean_added_per_sec=("added_per_sec", "mean"),
         mean_added=("added", "mean"),
         mean_elapsed=("elapsed", "mean"),
         n_users=("user_id", "count"),
     )
-
     print(result)
     return result
 

@@ -57,9 +57,6 @@ def run_analysis(
     association = pd.read_csv(association_path)
     annotations, validation = load_annotations(config)
     analytics: AnalyticsDetails = load_analytics(config.userdata)
-    total = analytics["total"][153]
-    for entry in total:
-        print(entry)
 
     for user in analytics["raw"]:
         print(
@@ -69,7 +66,7 @@ def run_analysis(
             len(analytics["raw"][user]) - 1,
             "parts (text changes)",
         )
-    analytics_df = analytics_to_df(analytics)
+    analytics_df = analytics_to_df(analytics, association)
     output_dir.mkdir(parents=True, exist_ok=True)
     if not validation.ok or annotations.empty:
         write_validation_report(validation, output_dir)

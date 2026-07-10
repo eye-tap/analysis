@@ -197,7 +197,9 @@ def load_analytics(
     return {"raw": data, "aggregate": aggregate, "total": sum_analytics(aggregate)}
 
 
-def analytics_to_df(analytics: AnalyticsDetails) -> pd.DataFrame:
+def analytics_to_df(
+    analytics: AnalyticsDetails, association: pd.DataFrame
+) -> pd.DataFrame:
     import pandas as pd
 
     rows = []
@@ -222,4 +224,13 @@ def analytics_to_df(analytics: AnalyticsDetails) -> pd.DataFrame:
                 }
             )
 
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+
+    # Add cohort (and only cohort) from the association table
+    df = df.merge(
+        association[["user_id", "cohort"]],
+        on="user_id",
+        how="left",
+    )
+
+    return df
