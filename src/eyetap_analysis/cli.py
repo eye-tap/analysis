@@ -47,7 +47,7 @@ def run_analysis(
     annotations, validation = load_annotations(config)
     analytics = load_analytics(config.userdata)
     for user in analytics["raw"]:
-        print("user", user, "has edited", len(analytics["raw"][user]), "texts")
+        print("The session of user", user, "is split into", len(analytics["raw"][user]) - 1, "parts (text changes)")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     if not validation.ok or annotations.empty:
