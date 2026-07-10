@@ -198,7 +198,7 @@ def load_analytics(
 
 
 def analytics_to_df(
-    analytics: AnalyticsDetails, association: pd.DataFrame
+    analytics: AnalyticsDetails, association: pd.DataFrame, text_association: pd.DataFrame
 ) -> pd.DataFrame:
     import pandas as pd
 
@@ -232,5 +232,19 @@ def analytics_to_df(
         on="user_id",
         how="left",
     )
+
+    print(text_association.columns)
+    print(df.columns)
+
+    df = df.merge(
+        text_association[["session_id", "reading_session_id"]],
+        left_on="text_id",
+        right_on="session_id",
+        how="left",
+    )
+
+    df["text_id"] = df["reading_session_id"]
+
+    df = df.drop(columns=["session_id", "reading_session_id"])
 
     return df

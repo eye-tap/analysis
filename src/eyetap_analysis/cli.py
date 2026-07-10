@@ -68,7 +68,7 @@ def run_analysis(
             len(analytics["raw"][user]) - 1,
             "parts (text changes)",
         )
-    analytics_df = analytics_to_df(analytics, association)
+    analytics_df = analytics_to_df(analytics, association, text_association)
     output_dir.mkdir(parents=True, exist_ok=True)
     if not validation.ok or annotations.empty:
         write_validation_report(validation, output_dir)
