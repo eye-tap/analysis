@@ -1,14 +1,6 @@
 from typing import TypedDict
 
 
-class Analytics(TypedDict):
-    timestamp: int
-    elapsed: float
-    text_id: int
-    assignments: AnalyticsAssignments
-    events: AnalyticsEvents
-
-
 class AnalyticsEvents(TypedDict):
     undo_redo: int
     completion: int
@@ -25,14 +17,6 @@ class AnalyticsAssignments(TypedDict):
     removed: int
     invalidated: int
     un_invalidated: int
-
-
-class AnalyticsRaw(TypedDict):
-    d: AnalyticsEventsRaw
-    f: AnalyticsAssignmentsRaw
-    t: int
-    e: float
-    x: int
 
 
 class AnalyticsEventsRaw(TypedDict):
@@ -52,11 +36,27 @@ class AnalyticsAssignmentsRaw(TypedDict):
     d: int  # Undo invalidate
 
 
-class AnalyticsDetails(TypedDict):
-    raw: dict[int, list[Analytics]]
-    aggregate: dict[int, list[AnalyticsAnalysisResults]]
-    total: dict[int, list[AnalyticsAnalysisResults]]
+class Analytics(TypedDict):
+    timestamp: int
+    elapsed: float
+    text_id: int
+    assignments: AnalyticsAssignments
+    events: AnalyticsEvents
+
+
+class AnalyticsRaw(TypedDict):
+    d: AnalyticsEventsRaw
+    f: AnalyticsAssignmentsRaw
+    t: int
+    e: float
+    x: int
 
 
 class AnalyticsAnalysisResults(Analytics):
     pass
+
+
+class AnalyticsDetails(TypedDict):
+    raw: dict[int, list[Analytics]]
+    aggregate: dict[int, list[AnalyticsAnalysisResults]]
+    total: dict[int, list[AnalyticsAnalysisResults]]

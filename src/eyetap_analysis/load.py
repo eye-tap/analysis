@@ -195,3 +195,31 @@ def load_analytics(
 
     aggregate = aggregate_analytics(data)
     return {"raw": data, "aggregate": aggregate, "total": sum_analytics(aggregate)}
+
+
+def analytics_to_df(analytics: AnalyticsDetails) -> pd.DataFrame:
+    import pandas as pd
+
+    rows = []
+    for user_id, entries in analytics["total"].items():
+        for entry in entries:
+            rows.append(
+                {
+                    "user_id": user_id,
+                    "text_id": entry["text_id"],
+                    "elapsed": entry["elapsed"],
+                    "added": entry["assignments"]["added"],
+                    "removed": entry["assignments"]["removed"],
+                    "invalidated": entry["assignments"]["invalidated"],
+                    "un_invalidated": entry["assignments"]["un_invalidated"],
+                    "completion": entry["events"]["completion"],
+                    "export": entry["events"]["export"],
+                    "res_bind": entry["events"]["res_bind"],
+                    "res_click": entry["events"]["res_click"],
+                    "scanpath_move": entry["events"]["scanpath_move"],
+                    "undo_redo": entry["events"]["undo_redo"],
+                    "zoom": entry["events"]["zoom"],
+                }
+            )
+
+    return pd.DataFrame(rows)

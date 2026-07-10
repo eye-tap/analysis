@@ -4,18 +4,26 @@ import argparse
 from datetime import date
 from pathlib import Path
 
+import pandas as pd
+
 from eyetap_analysis.agreement import (
     agreement_results_to_frame,
     compute_agreement_by_group,
     summarize_cohort_agreement,
 )
 from eyetap_analysis.config import load_config
+from eyetap_analysis.dtype import AnalyticsDetails
 from eyetap_analysis.efficiency import (
     compute_session_efficiency,
     summarize_cohort_efficiency,
     summarize_reading_session_efficiency,
 )
-from eyetap_analysis.load import load_analytics, load_annotations, load_session_metadata
+from eyetap_analysis.load import (
+    load_analytics,
+    load_annotations,
+    load_session_metadata,
+    analytics_to_df,
+)
 from eyetap_analysis.report import write_analysis_outputs, write_validation_report
 from eyetap_analysis.stats import (
     compare_efficiency_across_cohorts,
@@ -45,30 +53,35 @@ def run_analysis(
         cohort_overrides=cohort_overrides or {},
     )
     annotations, validation = load_annotations(config)
-    analytics = load_analytics(config.userdata)
-    for user in analytics["raw"]:
-        print("The session of user", user, "is split into", len(analytics["raw"][user]) - 1, "parts (text changes)")
+    analytics: AnalyticsDetails = load_analytics(config.userdata)
+    total = analytics["total"][153]
+    for entry in total:
+        print(entry)
 
+    for user in analytics["raw"]:
+        print(
+            "The session of user",
+            user,
+            "is split into",
+            len(analytics["raw"][user]) - 1,
+            "parts (text changes)",
+        )
+    analytics_df = analytics_to_df(analytics)
     output_dir.mkdir(parents=True, exist_ok=True)
     if not validation.ok or annotations.empty:
         write_validation_report(validation, output_dir)
         return 1
 
-    metadata = load_session_metadata(config)
-    session_efficiency = compute_session_efficiency(annotations, config, metadata)
-    cohort_efficiency_summary = summarize_cohort_efficiency(session_efficiency)
-    reading_session_efficiency = summarize_reading_session_efficiency(
-        session_efficiency
-    )
+    session_efficiency = compute_session_efficiency(analytics_df)
+    cohort_efficiency_summary = pd.DataFrame() # summarize_cohort_efficiency(session_efficiency)
+    reading_session_efficiency = pd.DataFrame() # summarize_reading_session_efficiency(session_efficiency)
 
     agreement_results = compute_agreement_by_group(annotations, config)
     agreement_by_reading_session = agreement_results_to_frame(agreement_results)
     cohort_agreement_summary = summarize_cohort_agreement(agreement_by_reading_session)
     cohort_agreement_ci = summarize_agreement_with_ci(agreement_by_reading_session)
 
-    efficiency_tests, efficiency_pairwise = compare_efficiency_across_cohorts(
-        session_efficiency
-    )
+    efficiency_tests, efficiency_pairwise = pd.DataFrame(), pd.DataFrame() # compare_efficiency_across_cohorts(session_efficiency)
 
     outputs = write_analysis_outputs(
         output_dir,
@@ -88,12 +101,12 @@ def run_analysis(
         if path is not None:
             print(f"  - {name}")
 
-    print("\nSession annotation counts:")
-    print(
-        session_efficiency[["cohort", "ANNOTATIONSESSIONID", "annotation_count"]]
-        .sort_values(["cohort", "ANNOTATIONSESSIONID"])
-        .to_string(index=False)
-    )
+    # print("\nSession annotation counts:")
+    # print(
+    #     session_efficiency[["cohort", "ANNOTATIONSESSIONID", "annotation_count"]]
+    #     .sort_values(["cohort", "ANNOTATIONSESSIONID"])
+    #     .to_string(index=False)
+    # )
 
     if validation.warnings:
         print("\nWarnings:")

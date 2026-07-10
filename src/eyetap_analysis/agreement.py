@@ -18,14 +18,14 @@ class AgreementResult:
     reading_session_id: str
     n_fixations: int
     n_raters: int
-    icc_2_1: float | None
-    icc_ci_lower: float | None
-    icc_ci_upper: float | None
-    fleiss_kappa: float | None
+    # icc_2_1: float | None
+    # icc_ci_lower: float | None
+    # icc_ci_upper: float | None
+    # fleiss_kappa: float | None
     krippendorff_alpha: float | None
     exact_agreement_rate: float | None
-    spatial_icc_x: float | None = None
-    spatial_icc_y: float | None = None
+    # spatial_icc_x: float | None = None
+    # spatial_icc_y: float | None = None
     warning: str | None = None
 
 
@@ -207,14 +207,14 @@ def compute_agreement_by_group(
                 reading_session_id=reading_session_id,
                 n_fixations=int(wide.shape[0]),
                 n_raters=int(n_raters),
-                icc_2_1=icc,
-                icc_ci_lower=icc_lo,
-                icc_ci_upper=icc_hi,
-                fleiss_kappa=kappa,
+                # icc_2_1=icc,
+                # icc_ci_lower=icc_lo,
+                # icc_ci_upper=icc_hi,
+                # fleiss_kappa=kappa,
                 krippendorff_alpha=alpha,
                 exact_agreement_rate=exact,
-                spatial_icc_x=spatial_x,
-                spatial_icc_y=spatial_y,
+                # spatial_icc_x=spatial_x,
+                # spatial_icc_y=spatial_y,
                 warning=warning,
             )
         )
