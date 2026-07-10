@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import TypedDict, cast
 
+from eyetap_analysis.analytics import AnalyticsAnalysisResults, aggregate_analytics
 import pandas as pd
 import numpy as np
 
@@ -204,9 +205,14 @@ class AnalyticsAssignmentsRaw(TypedDict):
     d: int  # Undo invalidate
 
 
+class AnalyticsDetails(TypedDict):
+    raw: dict[int, list[Analytics]]
+    aggregate: dict[int, list[AnalyticsAnalysisResults]]
+
+
 def load_analytics(
     path: str, analytics_column: str = "analytics", user_id_column: str = "user_id"
-):
+) -> AnalyticsDetails:
     userdata = pd.read_csv(path)
     data: dict[int, list[Analytics]] = {}
 
@@ -240,4 +246,4 @@ def load_analytics(
 
         data[uid] = parsed
 
-    return data
+    return {"raw": data, "aggregate": aggregate_analytics(data)}
